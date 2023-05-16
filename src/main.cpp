@@ -11,26 +11,32 @@ PubSubClient client(espClient);
 const char* ssid = WIFI_SSID;
 const char* password = WIFI_PSK;
 const char* mqtt_server = BROKER_IP;
-const char* mqtt_port = BROKER_PORT;
+const int mqtt_port = BROKER_PORT;
 const char* esp_name = ESP_NAME;
 const char* door_topic = DOOR_TOPIC;
 
 // callback to be called when posting to topic
 void callback(String topic, byte* message, unsigned int length);
 
-// esp led for testing purposes
-const int lamp = LED_BUILTIN;
+const int led = LED_BUILTIN;
+const int relePin 14;
+
+bool ledState = HIGH;
 
 void setup() {
 
   // start serial
-  Serial.begin(115200);
+  Serial.begin(9600);
   delay(100);
   Serial.println();
 
-  // setting pinmode for lamp
-  pinMode(lamp, OUTPUT);
-  digitalWrite(lamp, HIGH);
+  // setting pinmode for led
+  pinMode(led, OUTPUT);
+  pinMode(relePin, OUTPUT);
+  delay(10);
+  digitalWrite(led, ledState);
+  digitalWrite(relePin, !ledState);
+  delay(100);
  
   // set wifi to station mode (join a network that already exists)
   WiFi.mode(WIFI_STA);
@@ -41,23 +47,15 @@ void setup() {
   Serial.print(ssid);
   Serial.println("...");
  
-  // 20 seconds timeout
-  while(WiFi.status()!=WL_CONNECTED && retries<20)
+  // waiting for wifi connection
+  while(WiFi.status()!=WL_CONNECTED)
   {
     Serial.print(".");
-    retries++;
     delay(1000);
   }
  
   Serial.println(); 
-  
-  // if timeout, print it
-  if(retries==20)
-  {
-    Serial.print("Unable to Connect to ");
-    Serial.println(ssid);
-  }
-  
+    
   // connected to wifi
   if(WiFi.status()==WL_CONNECTED)
   {
@@ -92,7 +90,13 @@ void callback(String topic, byte* message, unsigned int length) {
       
       // open door
       if(messageTopic == "open"){
-        digitalWrite(lamp, LOW);
+	ledState = LOW;
+    	digitalWrite(ledPin, ledState);
+    	digitalWrite(relePin, !ledState);
+    	delay(500);
+    	ledState = HIGH;
+    	digitalWrite(ledPin, ledState);
+    	digitalWrite(relePin, !ledState);
         Serial.print("Opening door");
       }
   }

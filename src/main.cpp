@@ -4,6 +4,10 @@
 #include <PubSubClient.h>
 #include <TimeLib.h>
 
+// reset time config
+const int resetHour = 6;
+const int resetMinute = 0;
+
 // setting clients
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -127,6 +131,13 @@ void reconnect() {
 }
 
 void loop() {
+  int currentHour = hour();
+  int currentMinute = minute();
+
+  if (currentHour == resetHour && currentMinute == resetMinute) {
+    Serial.println("Restarting ESP");
+    ESP.restart();
+  }
 
   delay(5000);
 
